@@ -1,9 +1,31 @@
 //Adding support to different subredits
 var tx_subs = ["/r/InterdimensionalCable", "/r/NotTimAndEric", "/r/ACIDS", "/r/fifthworldvideos","/r/IllBeYourGuide", "/r/CommercialCuts"];
-var len_subs = tx_subs.length;
+var len_subs = tx_subs.length; // Number of subreddits videos are being called from
 var MAX_REQ = 50; //Max number of links will be requested each JSON call
 var PROB = 14; //Probability of accepting link (percentage)
 var min_score = 1; //Minimum score for reddit posts
+
+var state= null; // State variable that checks if the current content is crowdsourced from Reddit or from my array
+var region = null; // State variable that checks which regional array the current content is from
+
+// Timer variables
+var sec = null; 
+var timer = null;
+var timerScore = 0;
+
+// Scores used by algorithm to determine which content users are more comfortable with
+var northAmericaScore = 20;
+var latinAmericaScore = 20;
+var europeScore = 20;
+var africaScore = 20;
+var eastAsiaScore = 20;
+var middleEastScore = 20;
+
+var count = 0; // Counts number of videos gone through
+var totalScore = 60; // Algorithm scores
+var currentScore = 0;
+
+var emojiClicked = false;
 
 var min_score_slider = document.getElementById("min_score"); //Slider for minimum reddit score
 var min_score_output = document.getElementById("score_preview"); //Output for minimum reddit score
@@ -14,21 +36,21 @@ min_score_slider.oninput = function() {
     min_score = this.value;
 } 
 
-//Begining of original code
+// Array prototype functions
 if (!Array.prototype.randomElement) {
 	Array.prototype.randomElement = function () {
-		return this[Math.floor(Math.random() * this.length)];
+		return this[Math.floor(Math.random() * this.length)]; // Returns a randomly selected element
 	};
 }
 
 if (!Array.prototype.randomPop) {
 	Array.prototype.randomPop = function () {
 		var index = Math.floor(Math.random() * this.length);
-		return this.splice(index, 1)[0];
+		return this.splice(index, 1)[0]; // Returns 
 	};
 }
 
-
+// Runs the animation when the TV is turned on/ the channel is changed
 function animate_object(selector) {
 
 	var reset = function () {
@@ -40,6 +62,147 @@ function animate_object(selector) {
 	setTimeout(reset, 200);
 }
 
+// Returns ID from youtube url
+function youtube_parser(url){
+    var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+	var match = url.match(regExp);
+	if (match && match[2].length == 11) {
+	return match[2];
+	} else {
+	//error
+	}
+}
+
+// Starts Timer
+function startTimer(){
+	sec = 0;
+	var ele = document.getElementById("timer")
+	timer = setInterval(() => {
+		sec++
+		ele.innerHTML = '00:' + sec;
+	}, 1000);
+}
+
+// Ends timer and updates the algorithm
+function endTimer(){
+	var timeSpent = sec;
+	console.log(`TIme score ${timeSpent}`)
+	clearInterval(timer)
+
+	if (timeSpent > 8 && timeSpent <= 30){
+		timerScore = 1;
+		
+	}
+	else if (timeSpent >30 && timeSpent <= 45 ){
+		timerScore = 2;
+	}
+	else if (timeSpent > 45 && timeSpent <= 60){
+		timerScore = 3;
+	}
+	else if (timeSpent > 60){
+		timerScore = 4;
+	}
+
+	if (region === "northAmerica"){
+		northAmericaScore = northAmericaScore - timerScore;
+	}
+	else if (region === "latinAmerica"){
+		latinAmericaScore = latinAmericaScore - timerScore;
+	}
+	else if (region === "europe"){
+		europeScore = europeScore - timerScore;
+	}
+	else if (region === "africa"){
+		africaScore = africaScore - timerScore;
+	}
+	else if (region === "eastAsia"){
+		eastAsiaScore = eastAsiaScore - timerScore;
+	}
+	else if (region === "middleEast"){
+		middleEastScore = middleEastScore - timerScore;
+	}
+}
+
+// Allows emoji selection to affect the algorithm
+	function emojiSelect(){
+		console.log("emoji button clicked")
+		$(love).on("click", emojiAlgorithm(2))
+		$(lol).on("click", emojiAlgorithm(2))
+		$(mono).on("click", emojiAlgorithm(-1))
+		$(wut).on("click", emojiAlgorithm(-2))
+		$(whoa).on("click", emojiAlgorithm(-3))
+	
+	}
+
+	function emojiAlgorithm(score){
+		if (state === "array" && region === "northAmerica"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				northAmericaScore = northAmericaScore - emojiScore;
+				console.log("emoji clicked");
+				emojiClicked = true;
+			}
+		}
+		if (state === "array" && region === "latinAmerica"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				latinAmericaScore = latinAmericaScore - emojiScore;
+				console.log("emoji clicked");
+				emojiClicked = true;
+			}
+			
+		}
+		if (state === "array" && region === "europe"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				europeScore = europeScore - emojiScore;
+				console.log("emoji clicked")
+				emojiClicked = true;
+			}
+			
+		}
+		if (state === "array" && region === "africa"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				africaScore = africaScore - emojiScore;
+				console.log("emoji clicked");
+				emojiClicked = true;
+			}
+			
+		}
+		if (state === "array" && region === "eastAsia"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				eastAsiaScore = eastAsiaScore - emojiScore;
+				console.log("emoji clicked")
+				emojiClicked = true;	
+			}
+			
+		}
+		if (state === "array" && region === "middleEast"){
+			if (emojiClicked === false){
+				emojiScore = score;
+				middleEastScore = middleEastScore - emojiScore;
+				console.log("emoji clicked");
+				emojiClicked = true;
+			}
+		}
+
+	}
+
+	window.onload = function(){
+		// DOM Emoji elements
+		var love = document.getElementById("love");
+		var lol = document.getElementById("lol");
+		var mono = document.getElementById("mono");
+		var wut = document.getElementById("wut");
+		var whoa = document.getElementById("whoa");
+		var emojis = document.getElementsByClassName("emojis");
+		var emojiScore = 0;
+	}
+
+	emojiSelect();
+
 $(function () {
 	var get_next_post = (function () {
 
@@ -47,85 +210,49 @@ $(function () {
 
 		var videos = [], played = [];
 		
-		var probability_filter = function() {
+		var probability_filter = function() { 
 			var trial = 100*Math.random();
-			return trial <= PROB;	
+			return trial <= PROB;	// Returns true or false
 		}
 
-		var get_api_call = function (time, sort, page, random_page) {
+		var get_api_call = function (time, sort, page) {
 			var cb_subs = new Array(len_subs);
-			cb_subs[0] = document.getElementById("IDC"); // Interdimensional Cable
+			cb_subs[0] = document.getElementById("IDC"); // Default
 			cb_subs[1] = document.getElementById("NTE"); // Not Tim and Eric
 			cb_subs[2] = document.getElementById("ACI"); // ACIDS
 			cb_subs[3] = document.getElementById("FWV"); // Fifth World Videos
-                        cb_subs[4] = document.getElementById("IBG"); // I'll Be Your Guide
-                        cb_subs[5] = document.getElementById("CMC"); // Commercial Cuts
+            cb_subs[4] = document.getElementById("IBG"); // I'll Be Your Guide
+            cb_subs[5] = document.getElementById("CMC"); // Commercial Cuts
 			
+			console.log(cb_subs[0])
+			console.log(cb_subs[1])
+
+
 			var final_url;
 			var exist_checked = false;
-			for (i = 0; i < len_subs; i++) {
-				exist_checked = exist_checked || cb_subs[i].checked
+			for (let i = 0; i < len_subs; i++) {
+				exist_checked = exist_checked 
 			}
+		
 			if (exist_checked){
 				do {
-					var random_sub = Math.floor(len_subs * Math.random());
+					var random_sub = Math.floor(len_subs * Math.random()); // Selects a random number between 0 and number of subs  
 				} while (cb_subs[random_sub].checked == false);
 				
-				tx_message = "Checkeados:\n";
-				for (i = 0; i < len_subs; i++) {
+				let tx_message = "Checkeados:\n";
+				for (let i = 0; i < len_subs; i++) {
 					if ( cb_subs[i].checked == true )
 						tx_message += " · " + tx_subs[i] + "\n";
 				}
 			}else{
-				// if non option is 
-				// checked, use /r/InterdimensionalCable
-				// by default
+				// If non option is checked, use the default sub at position 0
 				var random_sub = 0;
 			}
 			var prefix = `https://www.reddit.com`+tx_subs[random_sub];
 			var suffix = ``;
-			if (random_page){
-				var use_randomrising = [true,false].randomElement();
-				if (!use_randomrising){
-					var random_post_data;
-					var is_ready = false;
-					var new_url;
-					$.getJSON(prefix+`/random.json`,function (api_response) {
-						api_response[0].data.children.forEach(function (child) {
-							random_post_data = child.data;
-							suffix = `?after=`+ random_post_data.name;
-							new_url = `https://www.reddit.com`+tx_subs[random_sub]+`/`+page+`.json`+suffix+`&limit=`+(MAX_REQ-1);
-							is_ready = true;
-							if(probability_filter()){
-								if (add_youtube_url(child.data)) {
-									console.log("Added " + child.data.url);
-								} else {
-									console.log("Ignored " + child.data.url);
-								}
-							}
-						});
-						$.getJSON(new_url, function (api_response) {
-							api_response.data.children.forEach(function (child) {
-								if(probability_filter()){
-									if (add_youtube_url(child.data)) {
-										console.log("Added " + child.data.url);
-									} else {
-										console.log("Ignored " + child.data.url);
-									}
-								}
-							});
-						}).fail(function () {
-							// Re-Poll on timeout/parse failure
-							setTimeout(load_videos, 5000);
-						});
-					});
-					return "nada"
-				}else{
-					return "https://www.reddit.com"+tx_subs[random_sub]+"/randomrising.json?limit="+(MAX_REQ);
-				}
-			}else{
-				return `https://www.reddit.com`+tx_subs[random_sub]+`/search.json?q=site%3Ayoutube.com+OR+site%3Ayoutu.be&restrict_sr=on&sort=${sort}&t=${time}&show="all"&limit=`+MAX_REQ+suffix;
-			}
+			
+			return `https://www.reddit.com`+tx_subs[random_sub]+`/search.json?q=site%3Ayoutube.com+OR+site%3Ayoutu.be&restrict_sr=on&sort=${sort}&t=${time}&show="all"&limit=`+MAX_REQ+suffix;
+			
 			
 			return null;
 		};
@@ -135,7 +262,7 @@ $(function () {
 			if (!youtube_video_regex.test(reddit_post_data.url)) {
 				return false;
 			}
-			// Check to see if the entier video is being linked.
+			// Check to see if the entire video is being linked.
 			// If a certain index is being linked, ignore the video.
 			if (reddit_post_data.url.indexOf("t=") != -1) {
 				return false;
@@ -159,15 +286,14 @@ $(function () {
 			return true;
 		};
 
-
-
+		// Loads reddit video URLs
 		var load_posts = function () {
 			var time = ["week", "month", "year", "all"].randomElement();
 			var sort = ["relevance", "hot", "top", "new", "comments"].randomElement();
 			var page = ["hot", "top", "new"].randomElement();
-			var random_page = [true,false].randomElement();
-			var url = get_api_call(time, sort, page, random_page);
-			if (url != "nada") {//Dirty awful hack
+			var url = get_api_call(time, sort, page);
+			console.log(`This is the url: ${url}`)
+			if (url != "nada") { //Dirty awful hack
 				$.getJSON(url, function (api_response) {
 					api_response.data.children.forEach(function (child) {
 						if(probability_filter()){
@@ -180,30 +306,113 @@ $(function () {
 					});
 				}).fail(function () {
 					// Re-Poll on timeout/parse failure
-					setTimeout(load_videos, 5000);
+					setTimeout(load_posts, 5000);
 				});
 			}//Else: see inside get_api_call()
 		};
 
+		// Loads video IDs from array of youtube urls
+		var loadNews = function (){
+			totalScore = northAmericaScore + latinAmericaScore + europeScore + eastAsiaScore + middleEastScore + africaScore;
+			currentScore = Math.floor(Math.random() * totalScore);
+			console.log(totalScore)
+			console.log(currentScore)
+			if (currentScore >= 0 && currentScore <= northAmericaScore){
+				region = 'northAmerica';
+				// Load video from North America array
+				let url = links.northAmerica.randomPop();
+				let id = youtube_parser(url)
+				console.log(`id ${id}`)
+				return {"link": url, "video": id }
+			}
+			else if (currentScore > northAmericaScore && currentScore <= northAmericaScore + latinAmericaScore){
+				region = 'latinAmerica';
+				// Load video from Latin America array
+				let url = links.latinAmerica.randomPop();
+				let id = youtube_parser(url);
+				console.log(`id ${id}`);
+				return {"link": url, "video": id };
+			}
+			else if (currentScore > northAmericaScore + latinAmericaScore && currentScore <= northAmericaScore + latinAmericaScore + europeScore){
+				region = 'europe';
+				// Load video from Europe array	
+				let url = links.europe.randomPop();
+				let id = youtube_parser(url);
+				console.log(`id ${id}`);
+				return {"link": url, "video": id };
+			}
+			else if (currentScore > northAmericaScore + latinAmericaScore + europeScore && currentScore <= northAmericaScore + latinAmericaScore + europeScore + africaScore){
+				region = 'africa';
+				// Load vide form Africa array
+				let url = links.africa.randomPop();
+				let id = youtube_parser(url);
+				console.log(`id ${id}`);
+				return {"link": url, "video": id };
+			}
+			else if (currentScore > northAmericaScore + latinAmericaScore + europeScore && currentScore <= northAmericaScore + latinAmericaScore + europeScore + eastAsiaScore){
+				region = 'eastAsia';
+				// Load video from East Asia array
+				let url = links.eastAsia.randomPop();
+				let id = youtube_parser(url);
+				console.log(`id ${id}`);
+				return {"link": url, "video": id };
+			}
+			else if (currentScore > northAmericaScore + latinAmericaScore + europeScore + eastAsiaScore && currentScore && currentScore <= totalScore){
+				region = 'middleEast';
+				// Load video from Middle East array
+				let url = links.middleEast.randomPop();
+				let id = youtube_parser(url);
+				console.log(`id ${id}`);
+				return {"link": url, "video": id };
+			}
+		}
+
+		// Resets the variables that affect which video is likely to be displayed after 20 cycles
+		var resetAlgorithm = function(){
+			if (count => 20){
+				northAmericaScore = 20;
+				latinAmericaScore = 20;
+				europeScore = 20;
+				africaScore = 20;
+				eastAsiaScore = 20;
+				middleEastScore = 20;
+				count = 0;
+			}
+		}
+
 		load_posts();
 
-		var get_next_post = function () {
-			// Removing this exception, now if length is zero, try again AND again.
-				// We ran out of videos
-				// Reddit is likely off
-				//if (videos.length == 0) {
-				//	return null;
-				//}
-			// We need to cache more videos
-			if (videos.length < 5) {
-				load_posts();
+		//Loads the next set of videos
+		var get_next_post = function () { 
+			let random = Math.random()
+			if (random <= 0.5){ // 50 % chance its from reddit
+				state = 'reddit';
+				region = 'null';
+				startTimer();
+				emojiClicked = false;
+				// If length of loaded video array is zero, try again AND again.
+				if (videos.length < 5) {
+					load_posts();
+				}
+				console.log(videos.randomPop())
+				return videos.randomPop();
 			}
-			return videos.randomPop();
+			else if (random > 0.5){ // 50% chance its from my arrays
+				state = 'array'
+				count++
+				startTimer();
+				emojiClicked = false;
+				console.log("Timer Started")
+				return loadNews();
+			}
+			
+			resetAlgorithm();
 		};
 
 		return get_next_post;
 	})();
 
+	// Channel change sfx
 	var sound_effect = (function () {
 		var sounds = {
 			"off": document.getElementById("off-audio"),
@@ -220,14 +429,13 @@ $(function () {
 
 	var animation = (function () {
 
-		var background_animation = document.getElementById("rick-bg");
 		var crt_click = document.getElementById("off-audio");
 
 		var last_timeout_id = undefined;
 
 		return function (callback, external) {
 
-
+			var background_animation = document.getElementById("rick-bg");
 			var duration = background_animation.duration * 1000;
 
 			if (last_timeout_id !== undefined) {
@@ -251,7 +459,7 @@ $(function () {
 
 				background_animation.play();
 
-				last_time_id = setTimeout(function () {
+				let last_time_id = setTimeout(function () {
 					callback.apply(this, callback_args);
 					last_time_id = undefined;
 				}, click_offset);
@@ -266,6 +474,8 @@ $(function () {
 	var animate_callback = function (callback) {
 		return function () {
 			if (animation(callback)) {
+				endTimer();
+				console.log("Timer Cleared")
 				return;
 			}
 			callback();
@@ -275,7 +485,6 @@ $(function () {
 	var volume_controller = function (player) {
 
 		var playing_clip = false;
-		var quote_player = document.getElementById("quote-player");
 
 		var guard = function (other) {
 			return function () {
@@ -336,15 +545,6 @@ $(function () {
 			var ducked_volume = initial_volume / 10;
 
 			player.setVolume(ducked_volume);
-
-			quote_player.src = audio_clip;
-
-			quote_player.addEventListener("ended", function (e) {
-				player.setVolume(initial_volume);
-			});
-
-			quote_player.play();
-
 		};
 
 		set_volume(50);
@@ -355,24 +555,14 @@ $(function () {
 
 	var channel_manager = function (player, get_next_video, play_clip) {
 		var channel_names = ["1", "2", "TWO", "3", "4", "42", "1337", "5", "6", "117", "💵", "💰", "7", "A113", "8", "AMMEL", "9", "10", "🐐", "101", "C137", "👌😂", "🍌", "☭", "🍆", "20", "30", "40", "50", "60", "69", "80", "90", "100", "/co/", "C132", "35C", "J19ζ7"];
-		var quotes = ["sexsells", "imporv", "relax", "billmurray", "movie"];
 
-		var handle_quote = function () {
-
-			// Only allow 10% of cases into this function
-			if (Math.random() > .1) {
-				return;
-			}
-			var clip_name = `audio/quotes/${quotes.randomPop()}.mp3`;
-			play_clip(clip_name);
-
-		};
 
 		var next_channel = function () {
 			// Set channel name
 			$("[data-channel-id]").attr("data-channel-id", channel_names.randomPop());
 
 			var video = get_next_video();
+			console.log(`This is ${video}`)
 
 			// Display to the user that we ran out of video
 			// This is probably from Reddit not responding to API requests.
@@ -384,8 +574,6 @@ $(function () {
 			}
 
 			$('.container').removeClass('offline');
-
-			handle_quote();
 
 			player.loadVideoById(video);
 
@@ -422,14 +610,24 @@ $(function () {
 
 		var get_next_video = function () {
 			var post = get_next_post();
-			$("#video-url").attr({
-				"href": post.link,
-				"target": "_blank"
-			});
+			console.log(`This is ${post}`)
+			if (state === 'reddit'){
+				console.log(`Right here ${post.link}`)
+				$("#video-url").attr({
+					"href": post.link,
+					"target": "_blank"
+				});
+			}
+			else if (state === 'array'){
+				$("#video-url").attr({
+					"href": post,
+					"target": "_blank"
+				});
+			}
 			return post.video;
 		};
 
-		var toggle_tv_classes = function () {
+		var toggle_tv_classes = function () {  // Turns the TV on and off
 			$("body").toggleClass("tv-on");
 			$("body").toggleClass("tv-off");
 		};
@@ -495,12 +693,12 @@ $(function () {
 			}
 		};
 
-		var on_error = function (event) {
+		var on_error = function (event) {  // Changes channel when theres an error
 			console.log("On Error Event");
 			$("#channel-up").click();
 		};
 
-		var create_player = function () {
+		var create_player = function () { // Creates the youtube player
 			return new YT.Player("yt-iframe", {
 				width: 1280,
 				height: 720,
@@ -523,7 +721,7 @@ $(function () {
 
 
 		return function () {
-
+			console.log("returning")
 			toggle_tv_classes();
 
 			if (player !== null) {
@@ -547,14 +745,10 @@ $(function () {
 			}
 
 			player = create_player();
-
 		};
 	})();
-
+	
 	$("#power").on("click", animate_callback(sound_effect(tv_toggle, "off")));
 	$('body').addClass('tv-off');
 
-	$("#zoom").on("click", animate_callback(function () {
-		$('.container').toggleClass('zoom');
-	}));
 });

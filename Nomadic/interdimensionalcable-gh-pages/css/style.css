@@ -230,9 +230,10 @@ html[data-useragent*=Firefox] .menu-overlay #video::before {
     padding-top: 0;
     height: 0;
     overflow: hidden;
-    top: 0;
+    top: -4rem;
+    right: 23.3rem;
     transform-origin: 5% 11%;
-    transform: scale(1);
+    transform: scale(1.8);
     transition: .4s ease-out, border .4s linear;
     box-shadow: 0px 0px 20px 1px rgba(0, 0, 0, 1);
     backface-visibility: hidden;
@@ -572,6 +573,7 @@ html[data-useragent*=Firefox] .menu-overlay #video::before {
 }
 .button.red{
     background: darkred;
+
 }
 .remote-area .remote{
     width: 200px;
@@ -655,34 +657,36 @@ html[data-useragent*=Firefox] .menu-overlay #video::before {
     z-index: -2;
 }
 
+#power{
+    position:absolute;
+    bottom: 1rem;
+    right: 29rem;
+    width: 6rem;
+    height: 6rem;
+    z-index: 4;
+    cursor: pointer;
+}
 
-/*
-.info-bar {
+#channel-up{
+    position:absolute;
+    bottom: 10rem;
+    right: 7.3rem;
+    width: 9rem;
+    height: 9rem;
+    z-index: 4;
+    cursor: pointer;
+}
+
+.emojis{
     position: absolute;
-    display: none;
-    flex-direction: row;
-    height: 110px;
-    width: 100%;
-    background: rgba(0,100,200,.6);
-    z-index: 1;
-    box-sizing: border-box;
-    padding: 2px 20px;
-    top: 2px;
+    display: flex;
+    z-index: 5;
+    scale: 0.2;
+    top: 73%;
+    right: -38.3%;
 }
 
-.info-bar .description{
-    flex-grow: 1;
+#love:hover, #lol:hover, #mono:hover, #wut:hover, #whoa:hover{ 
+    cursor: pointer;
+    scale: 1.2;
 }
-
-.image-container{
-    position: relative;
-    width: 140px;
-    margin-right: 10px;
-    margin-top: 14px;
-}
-.image-container .responsive{
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
-}
-*/
