@@ -14,7 +14,8 @@ mongoose.connect(
 mongoose.Promise = global.Promise;
 
 app.use(morgan("dev")); // HTTP Request middleware
-app.use(cors()); // Prevents cross origin resource sharing errors. ie when client receives response from an incorrect port
+app.use(cors()); // Prevents cross origin resource sharing errors. ie when client receives 
+//response from an incorrect port
 app.use(bodyParser.urlencoded({ extended: false })); // Makes JSON data more readable
 app.use(bodyParser.json());
 
